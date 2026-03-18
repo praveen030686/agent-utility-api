@@ -189,10 +189,16 @@ async def verify_x402_payment(request: Request):
 async def payment_middleware(request: Request, call_next):
     """Global payment verification middleware"""
     if request.url.path not in ["/", "/health", "/docs", "/redoc", "/openapi.json"]:
-        await verify_x402_payment(request)
+        try:
+            await verify_x402_payment(request)
+        except HTTPException as e:
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=e.status_code,
+                content=e.detail
+            )
     response = await call_next(request)
     return response
-
 
 # ============================================================================
 # 1. SLUG INTELLIGENCE API
