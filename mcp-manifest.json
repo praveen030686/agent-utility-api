@@ -1,0 +1,338 @@
+{
+  "name": "agent-utility-api",
+  "version": "1.0.0",
+  "description": "High-traffic utility endpoints for AI agents - slug intelligence, transliteration, IFSC lookup, timezone detection, phone validation",
+  "author": "Praveen",
+  "license": "MIT",
+  "payment": {
+    "protocol": "x402",
+    "chain": "base-mainnet",
+    "token": "USDC",
+    "amount": "0.001",
+    "recipient": "0x41A024c1C89Fd30122c8b184de99cbE751eaC970"
+  },
+  "base_url": "https://your-api.railway.app",
+  "tools": [
+    {
+      "name": "generate_slug",
+      "description": "Generate URL-safe slug from text. Removes special characters, converts to lowercase, handles word separators intelligently. Perfect for creating SEO-friendly URLs, database keys, or file names. Agents call this 10-100x per workflow.",
+      "endpoint": "/api/slug/generate",
+      "method": "POST",
+      "parameters": {
+        "text": {
+          "type": "string",
+          "description": "Text to convert to slug",
+          "required": true
+        },
+        "max_length": {
+          "type": "integer",
+          "description": "Maximum slug length (default: 50)",
+          "required": false,
+          "default": 50
+        },
+        "separator": {
+          "type": "string",
+          "description": "Word separator (default: -)",
+          "required": false,
+          "default": "-"
+        },
+        "lowercase": {
+          "type": "boolean",
+          "description": "Convert to lowercase (default: true)",
+          "required": false,
+          "default": true
+        }
+      },
+      "response": {
+        "slug": "string",
+        "original": "string",
+        "length": "integer",
+        "valid": "boolean"
+      },
+      "example": {
+        "request": {
+          "text": "Building AI Agents with Claude",
+          "max_length": 50
+        },
+        "response": {
+          "slug": "building-ai-agents-with-claude",
+          "original": "Building AI Agents with Claude",
+          "length": 31,
+          "valid": true
+        }
+      },
+      "use_cases": [
+        "Generate URL slugs for blog posts or products",
+        "Create database-safe keys from user input",
+        "Generate file names from document titles",
+        "Create SEO-friendly identifiers"
+      ]
+    },
+    {
+      "name": "validate_slug",
+      "description": "Validate if string is a proper slug. Checks for URL-safe characters, separator usage, length limits. Strict mode enables additional validation rules.",
+      "endpoint": "/api/slug/validate",
+      "method": "POST",
+      "parameters": {
+        "slug": {
+          "type": "string",
+          "description": "Slug to validate",
+          "required": true
+        },
+        "strict": {
+          "type": "boolean",
+          "description": "Enable strict validation mode",
+          "required": false,
+          "default": false
+        }
+      },
+      "response": {
+        "valid": "boolean",
+        "issues": "array",
+        "length": "integer"
+      }
+    },
+    {
+      "name": "compare_slug_similarity",
+      "description": "Calculate similarity between two slugs using sequence matching. Returns similarity ratio, common prefix/suffix, and interpretation. Useful for detecting duplicates or finding related content.",
+      "endpoint": "/api/slug/similarity",
+      "method": "POST",
+      "parameters": {
+        "slug1": {
+          "type": "string",
+          "required": true
+        },
+        "slug2": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "response": {
+        "similarity": "float",
+        "percentage": "float",
+        "interpretation": "string"
+      }
+    },
+    {
+      "name": "transliterate_text",
+      "description": "Transliterate text between Roman and Indic scripts (Devanagari, Telugu, Tamil, Kannada, Malayalam, Bengali, Gujarati, Gurmukhi, Oriya). Essential for Indian language applications, content localization, and multilingual search.",
+      "endpoint": "/api/transliterate",
+      "method": "POST",
+      "parameters": {
+        "text": {
+          "type": "string",
+          "description": "Text to transliterate",
+          "required": true
+        },
+        "from_script": {
+          "type": "string",
+          "description": "Source script",
+          "enum": ["roman", "devanagari", "telugu", "tamil", "kannada", "malayalam", "bengali", "gujarati", "gurmukhi", "oriya"],
+          "required": true
+        },
+        "to_script": {
+          "type": "string",
+          "description": "Target script",
+          "enum": ["roman", "devanagari", "telugu", "tamil", "kannada", "malayalam", "bengali", "gujarati", "gurmukhi", "oriya"],
+          "required": true
+        }
+      },
+      "response": {
+        "original": "string",
+        "transliterated": "string",
+        "from_script": "string",
+        "to_script": "string"
+      },
+      "example": {
+        "request": {
+          "text": "namaste",
+          "from_script": "roman",
+          "to_script": "devanagari"
+        },
+        "response": {
+          "original": "namaste",
+          "transliterated": "नमस्ते",
+          "from_script": "roman",
+          "to_script": "devanagari"
+        }
+      },
+      "use_cases": [
+        "Convert user input to native script for Indian language apps",
+        "Enable multilingual search across Roman and Indic scripts",
+        "Generate localized content from English input",
+        "Create bilingual UIs with consistent transliteration"
+      ]
+    },
+    {
+      "name": "lookup_ifsc",
+      "description": "Get complete Indian bank branch details from IFSC code. Returns bank name, branch, address, city, state, contact, MICR, and SWIFT codes. Critical for payment processing, KYC, and financial applications.",
+      "endpoint": "/api/ifsc/lookup",
+      "method": "POST",
+      "parameters": {
+        "ifsc": {
+          "type": "string",
+          "description": "11-character IFSC code (format: XXXX0XXXXXX)",
+          "required": true,
+          "pattern": "^[A-Z]{4}0[A-Z0-9]{6}$"
+        }
+      },
+      "response": {
+        "ifsc": "string",
+        "valid_format": "boolean",
+        "bank": "string",
+        "branch": "string",
+        "address": "string",
+        "city": "string",
+        "state": "string",
+        "contact": "string",
+        "micr": "string",
+        "swift": "string"
+      },
+      "example": {
+        "request": {
+          "ifsc": "SBIN0000001"
+        },
+        "response": {
+          "ifsc": "SBIN0000001",
+          "bank": "State Bank of India",
+          "branch": "New Delhi Main Branch",
+          "city": "New Delhi",
+          "state": "Delhi"
+        }
+      },
+      "use_cases": [
+        "Validate bank account details during payment setup",
+        "Auto-fill bank information in KYC forms",
+        "Verify beneficiary details for fund transfers",
+        "Display branch location on maps"
+      ]
+    },
+    {
+      "name": "validate_ifsc_format",
+      "description": "Quick format validation for IFSC codes without database lookup. Returns bank code extraction and format validity.",
+      "endpoint": "/api/ifsc/validate/{ifsc}",
+      "method": "GET",
+      "parameters": {
+        "ifsc": {
+          "type": "string",
+          "description": "IFSC code to validate",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "detect_timezone",
+      "description": "Get timezone from geographic coordinates. Returns IANA timezone name, current time, UTC offset, and DST status. Extremely fast (<1ms) - critical for scheduling, booking, and location-based applications.",
+      "endpoint": "/api/timezone/lookup",
+      "method": "POST",
+      "parameters": {
+        "latitude": {
+          "type": "number",
+          "description": "Latitude (-90 to 90)",
+          "required": true,
+          "minimum": -90,
+          "maximum": 90
+        },
+        "longitude": {
+          "type": "number",
+          "description": "Longitude (-180 to 180)",
+          "required": true,
+          "minimum": -180,
+          "maximum": 180
+        }
+      },
+      "response": {
+        "timezone": "string",
+        "current_time": "string",
+        "utc_offset": "string",
+        "dst_active": "boolean"
+      },
+      "example": {
+        "request": {
+          "latitude": 19.076,
+          "longitude": 72.8777
+        },
+        "response": {
+          "timezone": "Asia/Kolkata",
+          "current_time": "2024-03-18T15:30:00+05:30",
+          "utc_offset": "+0530",
+          "dst_active": false
+        }
+      },
+      "use_cases": [
+        "Display local time for users in different locations",
+        "Schedule meetings across timezones",
+        "Convert coordinates to timezone for booking systems",
+        "Determine business hours based on user location"
+      ]
+    },
+    {
+      "name": "validate_phone",
+      "description": "Validate Indian phone numbers and extract carrier information. Supports mobile (10-digit), landline, and international formats. Returns format validation, carrier detection, and formatted outputs (national, international, E.164).",
+      "endpoint": "/api/phone/validate",
+      "method": "POST",
+      "parameters": {
+        "phone": {
+          "type": "string",
+          "description": "Phone number to validate",
+          "required": true
+        },
+        "country_code": {
+          "type": "string",
+          "description": "Country code (default: IN)",
+          "required": false,
+          "default": "IN"
+        }
+      },
+      "response": {
+        "valid": "boolean",
+        "type": "string",
+        "carrier": "string",
+        "formats": {
+          "national": "string",
+          "international": "string",
+          "e164": "string"
+        }
+      },
+      "example": {
+        "request": {
+          "phone": "+919876543210",
+          "country_code": "IN"
+        },
+        "response": {
+          "valid": true,
+          "type": "mobile",
+          "carrier": "Airtel",
+          "formats": {
+            "national": "098765 43210",
+            "international": "+91 98765 43210",
+            "e164": "+919876543210"
+          }
+        }
+      },
+      "use_cases": [
+        "Validate phone numbers during user registration",
+        "Format phone numbers consistently across the app",
+        "Detect carrier for SMS routing optimization",
+        "Verify phone number type (mobile vs landline)"
+      ]
+    }
+  ],
+  "rate_limits": {
+    "default": "100 requests per minute per IP"
+  },
+  "authentication": {
+    "type": "x402",
+    "header": "x-payment",
+    "description": "Include USDC transaction hash on Base mainnet in x-payment header"
+  },
+  "documentation": {
+    "swagger_ui": "/docs",
+    "redoc": "/redoc",
+    "openapi_json": "/openapi.json"
+  },
+  "support": {
+    "github": "https://github.com/yourusername/agent-utility-api",
+    "email": "support@yourapi.com"
+  }
+}
